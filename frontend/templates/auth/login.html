@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Login - AI Network Intrusion Detection System{% endblock %}
+
+{% block auth_content %}
+<div class="row justify-content-center align-items-center min-vh-100">
+  <div class="col-md-5 col-lg-4">
+    <div class="cyber-card p-4">
+      <div class="text-center mb-4">
+        <i class="fa-solid fa-shield-halved text-cyan fs-1 mb-2" style="color: #06b6d4;"></i>
+        <h4 class="text-white fw-bold">SOC Terminal Access</h4>
+        <p class="text-muted small">AI Network Intrusion Detection System</p>
+      </div>
+
+      <form method="POST" action="{{ url_for('auth.login') }}">
+        <div class="mb-3">
+          <label class="form-label text-muted small fw-bold">USERNAME</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-user"></i></span>
+            <input type="text" name="username" class="form-control form-cyber" placeholder="Enter username" required autofocus>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label text-muted small fw-bold">PASSWORD</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-lock"></i></span>
+            <input type="password" name="password" class="form-control form-cyber" placeholder="Enter password" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-cyan w-100 py-2 fw-bold">
+          <i class="fa-solid fa-right-to-bracket me-2"></i> Authenticate
+        </button>
+      </form>
+
+      <div class="text-center mt-4 text-muted small">
+        Default Credentials:<br>
+        <span class="text-white">admin</span> / <span class="text-white">Admin@123456</span> (Admin)<br>
+        <span class="text-white">analyst</span> / <span class="text-white">Analyst@123456</span> (Analyst)
+      </div>
+
+      <div class="text-center mt-3">
+        <a href="{{ url_for('auth.register') }}" class="text-cyan text-decoration-none small">Register New Account</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

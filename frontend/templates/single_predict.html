@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Single Flow Predictor - NIDS{% endblock %}
+{% block page_title %}Manual Traffic Flow Classification Form{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="cyber-card">
+      <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-sliders me-2 text-cyan"></i> Packet Flow Feature Inputs</h6>
+
+      <form id="single-predict-form">
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">SOURCE IP</label>
+            <input type="text" id="source_ip" class="form-control form-cyber" value="192.168.1.120" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">DESTINATION IP</label>
+            <input type="text" id="destination_ip" class="form-control form-cyber" value="10.0.0.5" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">PROTOCOL</label>
+            <select id="protocol" class="form-select form-cyber">
+              <option value="TCP">TCP</option>
+              <option value="UDP">UDP</option>
+              <option value="ICMP">ICMP</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">DESTINATION PORT</label>
+            <input type="number" id="destination_port" class="form-control form-cyber" value="80" required>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">FLOW DURATION (µs)</label>
+            <input type="number" id="flow_duration" class="form-control form-cyber" value="1500" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">TOTAL FWD PACKETS</label>
+            <input type="number" id="total_fwd_packets" class="form-control form-cyber" value="150" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">TOTAL BWD PACKETS</label>
+            <input type="number" id="total_backward_packets" class="form-control form-cyber" value="2" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">FWD PKT LENGTH MAX</label>
+            <input type="number" id="fwd_packet_length_max" class="form-control form-cyber" value="1460" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">BWD PKT LENGTH MEAN</label>
+            <input type="number" id="bwd_packet_length_mean" class="form-control form-cyber" value="10" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">FLOW BYTES/S</label>
+            <input type="number" id="flow_bytes_s" class="form-control form-cyber" value="1500000" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted small fw-bold">FLOW PACKETS/S</label>
+            <input type="number" id="flow_packets_s" class="form-control form-cyber" value="5000" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-cyan w-100 py-2 fw-bold" id="btn-single-submit">
+          <i class="fa-solid fa-radar me-2"></i> Classify Flow Packet
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="cyber-card" id="result-container">
+      <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-square-poll-vertical me-2 text-cyan"></i> Classification Output</h6>
+
+      <div id="result-placeholder" class="text-center text-muted py-5">
+        <i class="fa-solid fa-shield-virus fs-1 mb-3 text-secondary"></i>
+        <p>Submit flow features to evaluate threat status and model confidence.</p>
+      </div>
+
+      <div id="result-content" class="d-none">
+        <div class="p-4 rounded mb-4" id="result-box">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-muted small fw-bold text-uppercase">Predicted Classification</span>
+            <span class="badge" id="res-severity-badge">MEDIUM</span>
+          </div>
+          <h2 class="fw-bold text-white mb-2" id="res-attack-type">DoS</h2>
+          <div class="fs-5 text-cyan" id="res-confidence">Confidence: 98.4%</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="text-muted small fw-bold">DEFENSIVE ANALYSIS & DESCRIPTION</label>
+          <p class="text-white bg-dark p-3 rounded border border-secondary" id="res-description"></p>
+        </div>
+
+        <div class="d-flex justify-content-between text-muted small border-top border-secondary pt-3">
+          <span>Alert Triggered: <strong id="res-alert-triggered" class="text-warning">Yes</strong></span>
+          <span>Timestamp: <strong id="res-timestamp" class="text-white">Just now</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("single-predict-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    source_ip: document.getElementById("source_ip").value,
+    destination_ip: document.getElementById("destination_ip").value,
+    protocol: document.getElementById("protocol").value,
+    destination_port: parseInt(document.getElementById("destination_port").value),
+    flow_duration: parseFloat(document.getElementById("flow_duration").value),
+    total_fwd_packets: parseInt(document.getElementById("total_fwd_packets").value),
+    total_backward_packets: parseInt(document.getElementById("total_backward_packets").value),
+    fwd_packet_length_max: parseFloat(document.getElementById("fwd_packet_length_max").value),
+    bwd_packet_length_mean: parseFloat(document.getElementById("bwd_packet_length_mean").value),
+    flow_bytes_s: parseFloat(document.getElementById("flow_bytes_s").value),
+    flow_packets_s: parseFloat(document.getElementById("flow_packets_s").value),
+  };
+
+  const btn = document.getElementById("btn-single-submit");
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Classifying...`;
+
+  try {
+    const res = await fetch("/api/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      document.getElementById("result-placeholder").classList.add("d-none");
+      document.getElementById("result-content").classList.remove("d-none");
+
+      document.getElementById("res-attack-type").innerText = data.attack_type;
+      document.getElementById("res-confidence").innerText = `Confidence: ${(data.confidence * 100).toFixed(1)}%`;
+      document.getElementById("res-description").innerText = data.description;
+      document.getElementById("res-alert-triggered").innerText = data.alert_generated ? "YES (Added to Alert Queue)" : "NO (Normal Traffic)";
+      document.getElementById("res-timestamp").innerText = new Date(data.timestamp).toLocaleTimeString();
+
+      const badge = document.getElementById("res-severity-badge");
+      badge.innerText = data.severity;
+      badge.className = `badge badge-sev ${data.severity === 'CRITICAL' ? 'badge-sev-critical' : (data.severity === 'HIGH' ? 'badge-sev-high' : (data.severity === 'MEDIUM' ? 'badge-sev-medium' : 'badge-sev-low'))}`;
+    } else {
+      alert(`Error: ${data.error}`);
+    }
+  } catch (err) {
+    alert(`Request failed: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fa-solid fa-radar me-2"></i> Classify Flow Packet`;
+  }
+});
+</script>
+{% endblock %}

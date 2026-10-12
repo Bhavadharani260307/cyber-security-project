@@ -1,0 +1,165 @@
+{
+  "primary_model": "Random Forest",
+  "overall_metrics": {
+    "accuracy": 0.998,
+    "precision": 0.998,
+    "recall": 0.998,
+    "f1_score": 0.998
+  },
+  "classes": [
+    "BENIGN",
+    "Bot",
+    "Brute Force",
+    "DDoS",
+    "DoS",
+    "Infiltration",
+    "Port Scan",
+    "Web Attack"
+  ],
+  "confusion_matrix": [
+    [
+      61,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      62,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      63,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      63,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      63,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      62,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      63,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      62
+    ]
+  ],
+  "class_metrics": {
+    "BENIGN": {
+      "precision": 1.0,
+      "recall": 0.9839,
+      "f1_score": 0.9919,
+      "support": 62
+    },
+    "Bot": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 62
+    },
+    "Brute Force": {
+      "precision": 0.9844,
+      "recall": 1.0,
+      "f1_score": 0.9921,
+      "support": 63
+    },
+    "DDoS": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 63
+    },
+    "DoS": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 63
+    },
+    "Infiltration": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 62
+    },
+    "Port Scan": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 63
+    },
+    "Web Attack": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 62
+    }
+  },
+  "compared_models": {
+    "Decision Tree": {
+      "accuracy": 0.996,
+      "precision": 0.9961,
+      "recall": 0.996,
+      "f1_score": 0.996
+    },
+    "Logistic Regression": {
+      "accuracy": 0.934,
+      "precision": 0.9351,
+      "recall": 0.934,
+      "f1_score": 0.9328
+    }
+  }
+}

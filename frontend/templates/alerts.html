@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Threat Alerts - NIDS{% endblock %}
+{% block page_title %}Alert Management & Incident Response{% endblock %}
+
+{% block content %}
+<div class="cyber-card mb-4">
+  <div class="row g-3 align-items-center">
+    <div class="col-md-4">
+      <label class="form-label text-muted small fw-bold">FILTER BY STATUS</label>
+      <select id="filter-status" class="form-select form-cyber">
+        <option value="">All Statuses</option>
+        <option value="NEW">NEW</option>
+        <option value="INVESTIGATING">INVESTIGATING</option>
+        <option value="RESOLVED">RESOLVED</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label text-muted small fw-bold">FILTER BY SEVERITY</label>
+      <select id="filter-severity" class="form-select form-cyber">
+        <option value="">All Severities</option>
+        <option value="CRITICAL">CRITICAL</option>
+        <option value="HIGH">HIGH</option>
+        <option value="MEDIUM">MEDIUM</option>
+        <option value="LOW">LOW</option>
+      </select>
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <button class="btn btn-cyan w-100 mt-4 py-2 fw-bold" onclick="loadAlerts()">
+        <i class="fa-solid fa-filter me-2"></i> Apply Filters
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="cyber-card">
+  <div class="table-responsive">
+    <table class="table table-cyber m-0 align-middle">
+      <thead>
+        <tr>
+          <th>ALERT ID</th>
+          <th>TIMESTAMP</th>
+          <th>SRC IP</th>
+          <th>DST IP</th>
+          <th>ATTACK CLASSIFICATION</th>
+          <th>SEVERITY</th>
+          <th>CONFIDENCE</th>
+          <th>STATUS</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="alerts-tbody">
+        <tr>
+          <td colspan="9" class="text-center text-muted py-5">Loading alerts...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", loadAlerts);
+
+async function loadAlerts() {
+  const status = document.getElementById("filter-status").value;
+  const severity = document.getElementById("filter-severity").value;
+
+  let url = `/api/alerts?limit=100`;
+  if (status) url += `&status=${status}`;
+  if (severity) url += `&severity=${severity}`;
+
+  try {
+    const res = await fetch(url);
+    const alerts = await res.json();
+    renderAlertsTable(alerts);
+  } catch (err) {
+    console.error("Failed to load alerts:", err);
+  }
+}
+
+function renderAlertsTable(alerts) {
+  const tbody = document.getElementById("alerts-tbody");
+  tbody.innerHTML = "";
+
+  if (!alerts || alerts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-4">No matching security alerts found.</td></tr>`;
+    return;
+  }
+
+  alerts.forEach(a => {
+    let sevClass = "badge-sev-low";
+    if (a.severity === "MEDIUM") sevClass = "badge-sev-medium";
+    if (a.severity === "HIGH") sevClass = "badge-sev-high";
+    if (a.severity === "CRITICAL") sevClass = "badge-sev-critical";
+
+    let statusBadge = `<span class="badge bg-danger">${a.status}</span>`;
+    if (a.status === "INVESTIGATING") statusBadge = `<span class="badge bg-warning text-dark">${a.status}</span>`;
+    if (a.status === "RESOLVED") statusBadge = `<span class="badge bg-success">${a.status}</span>`;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>#${a.id}</td>
+      <td class="small text-muted">${new Date(a.created_at).toLocaleString()}</td>
+      <td><code>${a.source_ip}</code></td>
+      <td><code>${a.destination_ip}</code></td>
+      <td><span class="fw-bold text-white">${a.attack_type}</span></td>
+      <td><span class="badge badge-sev ${sevClass}">${a.severity}</span></td>
+      <td>${(a.confidence * 100).toFixed(1)}%</td>
+      <td>${statusBadge}</td>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle text-white" type="button" data-bs-toggle="dropdown">
+            Update
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark">
+            <li><a class="dropdown-item" href="#" onclick="updateAlertStatus(${a.id}, 'NEW')">Mark NEW</a></li>
+            <li><a class="dropdown-item" href="#" onclick="updateAlertStatus(${a.id}, 'INVESTIGATING')">Mark INVESTIGATING</a></li>
+            <li><a class="dropdown-item" href="#" onclick="updateAlertStatus(${a.id}, 'RESOLVED')">Mark RESOLVED</a></li>
+          </ul>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function updateAlertStatus(alertId, newStatus) {
+  try {
+    const res = await fetch(`/api/alerts/${alertId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus })
+    });
+    if (res.ok) {
+      loadAlerts();
+    } else {
+      alert("Failed to update status");
+    }
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}User Management - NIDS{% endblock %}
+{% block page_title %}Admin Console - User Management{% endblock %}
+
+{% block content %}
+<div class="cyber-card">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="text-white fw-bold m-0"><i class="fa-solid fa-users-gear me-2 text-cyan"></i> Registered System Users</h6>
+    <span class="badge bg-danger">ADMINISTRATOR ONLY</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-cyber m-0 align-middle">
+      <thead>
+        <tr>
+          <th>USER ID</th>
+          <th>USERNAME</th>
+          <th>EMAIL ADDRESS</th>
+          <th>ASSIGNED ROLE</th>
+          <th>ACCOUNT CREATED</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody">
+        <tr><td colspan="5" class="text-center text-muted py-4">Loading user records...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch("/auth/users");
+    const users = await res.json();
+    const tbody = document.getElementById("users-tbody");
+    tbody.innerHTML = "";
+
+    users.forEach(u => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>#${u.id}</td>
+        <td><strong class="text-white">${u.username}</strong></td>
+        <td><code>${u.email}</code></td>
+        <td><span class="badge ${u.role === 'Admin' ? 'bg-danger' : 'bg-primary'}">${u.role}</span></td>
+        <td class="small text-muted">${new Date(u.created_at).toLocaleString()}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Failed to load users:", err);
+  }
+});
+</script>
+{% endblock %}

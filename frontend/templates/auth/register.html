@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Register - AI Network Intrusion Detection System{% endblock %}
+
+{% block auth_content %}
+<div class="row justify-content-center align-items-center min-vh-100">
+  <div class="col-md-5 col-lg-4">
+    <div class="cyber-card p-4">
+      <div class="text-center mb-4">
+        <i class="fa-solid fa-user-plus text-cyan fs-1 mb-2" style="color: #06b6d4;"></i>
+        <h4 class="text-white fw-bold">Analyst Registration</h4>
+        <p class="text-muted small">Create an account for SOC Monitoring</p>
+      </div>
+
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        <div class="mb-3">
+          <label class="form-label text-muted small fw-bold">USERNAME</label>
+          <input type="text" name="username" class="form-control form-cyber" placeholder="Choose username" required autofocus>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-muted small fw-bold">EMAIL ADDRESS</label>
+          <input type="email" name="email" class="form-control form-cyber" placeholder="analyst@domain.com" required>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label text-muted small fw-bold">PASSWORD</label>
+          <input type="password" name="password" class="form-control form-cyber" placeholder="Create strong password" required>
+        </div>
+
+        <button type="submit" class="btn btn-cyan w-100 py-2 fw-bold">
+          <i class="fa-solid fa-user-check me-2"></i> Register Account
+        </button>
+      </form>
+
+      <div class="text-center mt-4">
+        <a href="{{ url_for('auth.login') }}" class="text-cyan text-decoration-none small">Already registered? Log in here</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

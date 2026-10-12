@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Model Metrics - NIDS{% endblock %}
+{% block page_title %}Machine Learning Model Evaluation & Metrics{% endblock %}
+
+{% block content %}
+<!-- Model Comparison Cards -->
+<div class="row g-4 mb-4" id="model-comparison-container">
+  <div class="col-md-4">
+    <div class="cyber-card border-info">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge bg-cyan text-dark fw-bold">PRIMARY MODEL</span>
+        <span class="text-cyan small fw-bold">Random Forest</span>
+      </div>
+      <div class="display-6 text-white fw-bold" id="rf-acc">--%</div>
+      <div class="text-muted small">Weighted F1-Score: <span class="text-white fw-bold" id="rf-f1">--</span></div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="cyber-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge bg-secondary">COMPARISON</span>
+        <span class="text-muted small fw-bold">Decision Tree</span>
+      </div>
+      <div class="display-6 text-white fw-bold" id="dt-acc">--%</div>
+      <div class="text-muted small">Weighted F1-Score: <span class="text-white fw-bold" id="dt-f1">--</span></div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="cyber-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge bg-secondary">BASELINE</span>
+        <span class="text-muted small fw-bold">Logistic Regression</span>
+      </div>
+      <div class="display-6 text-white fw-bold" id="lr-acc">--%</div>
+      <div class="text-muted small">Weighted F1-Score: <span class="text-white fw-bold" id="lr-f1">--</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Per-Class Metrics Table -->
+  <div class="col-lg-7">
+    <div class="cyber-card">
+      <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-list-ol me-2 text-cyan"></i> Per-Category Precision, Recall & F1-Score</h6>
+      <div class="table-responsive">
+        <table class="table table-cyber m-0 align-middle">
+          <thead>
+            <tr>
+              <th>ATTACK LABEL</th>
+              <th>PRECISION</th>
+              <th>RECALL</th>
+              <th>F1-SCORE</th>
+              <th>SUPPORT</th>
+            </tr>
+          </thead>
+          <tbody id="per-class-tbody">
+            <tr><td colspan="5" class="text-center text-muted py-4">Loading evaluation metrics...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Why Accuracy Alone is Insufficient -->
+  <div class="col-lg-5">
+    <div class="cyber-card">
+      <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-shield-cat me-2 text-cyan"></i> Why Accuracy Alone Is Not Enough</h6>
+      <div class="text-muted small lh-lg">
+        <p>In network intrusion detection, dataset class distribution is heavily imbalanced (e.g. 99% benign traffic, 1% stealthy infiltration).</p>
+        <p>A naive dummy model predicting "BENIGN" for every single packet would achieve <strong>99% raw accuracy</strong> while failing to detect 100% of cyber threats!</p>
+        <p class="m-0 text-cyan">Therefore, evaluation relies on <strong>Recall (Sensitivity)</strong> to minimize False Negatives and <strong>F1-Score</strong> to balance precision against stealth attacks.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confusion Matrix Heatmap -->
+<div class="cyber-card">
+  <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-table-cells me-2 text-cyan"></i> Multi-Class Confusion Matrix Heatmap</h6>
+  <div class="table-responsive">
+    <table class="table table-bordered border-secondary text-center text-white align-middle" id="cm-table">
+      <!-- Generated via JS -->
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch("/api/model/metrics");
+    const data = await res.json();
+
+    // Primary RF Metrics
+    const rfAcc = (data.overall_metrics.accuracy * 100).toFixed(2);
+    document.getElementById("rf-acc").innerText = `${rfAcc}%`;
+    document.getElementById("rf-f1").innerText = data.overall_metrics.f1_score;
+
+    // Compared Models
+    if (data.compared_models["Decision Tree"]) {
+      document.getElementById("dt-acc").innerText = `${(data.compared_models["Decision Tree"].accuracy * 100).toFixed(2)}%`;
+      document.getElementById("dt-f1").innerText = data.compared_models["Decision Tree"].f1_score;
+    }
+    if (data.compared_models["Logistic Regression"]) {
+      document.getElementById("lr-acc").innerText = `${(data.compared_models["Logistic Regression"].accuracy * 100).toFixed(2)}%`;
+      document.getElementById("lr-f1").innerText = data.compared_models["Logistic Regression"].f1_score;
+    }
+
+    // Per-Class Table
+    const tbody = document.getElementById("per-class-tbody");
+    tbody.innerHTML = "";
+    Object.keys(data.class_metrics).forEach(cls => {
+      const m = data.class_metrics[cls];
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong class="text-white">${cls}</strong></td>
+        <td>${(m.precision * 100).toFixed(1)}%</td>
+        <td>${(m.recall * 100).toFixed(1)}%</td>
+        <td><span class="badge bg-dark border border-cyan text-cyan">${m.f1_score}</span></td>
+        <td>${m.support}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Render Confusion Matrix
+    renderConfusionMatrix(data.classes, data.confusion_matrix);
+
+  } catch (err) {
+    console.error("Failed to load model metrics:", err);
+  }
+});
+
+function renderConfusionMatrix(classes, cm) {
+  const table = document.getElementById("cm-table");
+  table.innerHTML = "";
+
+  // Header Row
+  let thead = `<thead class="bg-dark text-muted"><tr><th>Actual \\ Predicted</th>`;
+  classes.forEach(c => { thead += `<th>${c}</th>`; });
+  thead += `</tr></thead>`;
+
+  let tbody = `<tbody>`;
+  for (let i = 0; i < classes.length; i++) {
+    tbody += `<tr><th class="bg-dark text-muted">${classes[i]}</th>`;
+    for (let j = 0; j < classes.length; j++) {
+      const val = cm[i][j];
+      const isDiagonal = (i === j);
+      const bgStyle = isDiagonal ? "background-color: rgba(16, 185, 129, 0.25); color: #34d399; font-weight: bold;" : (val > 0 ? "background-color: rgba(239, 68, 68, 0.2); color: #f87171;" : "color: #64748b;");
+      tbody += `<td style="${bgStyle}">${val}</td>`;
+    }
+    tbody += `</tr>`;
+  }
+  tbody += `</tbody>`;
+
+  table.innerHTML = thead + tbody;
+}
+</script>
+{% endblock %}

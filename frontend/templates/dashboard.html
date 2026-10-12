@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Threat Monitor{% endblock %}
+{% block page_title %}Security Operations Dashboard{% endblock %}
+
+{% block content %}
+<!-- Metric Summary Cards -->
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-lg-3">
+    <div class="cyber-card metric-card">
+      <div>
+        <div class="metric-lbl">Total Flow Records</div>
+        <div class="metric-val" id="val-total-traffic">0</div>
+      </div>
+      <div class="metric-icon blue"><i class="fa-solid fa-network-wired"></i></div>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-3">
+    <div class="cyber-card metric-card">
+      <div>
+        <div class="metric-lbl">Normal Traffic</div>
+        <div class="metric-val" id="val-normal-traffic">0</div>
+      </div>
+      <div class="metric-icon green"><i class="fa-solid fa-shield-check"></i></div>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-3">
+    <div class="cyber-card metric-card">
+      <div>
+        <div class="metric-lbl">Attacks Detected</div>
+        <div class="metric-val text-danger" id="val-attacks-detected">0</div>
+      </div>
+      <div class="metric-icon danger"><i class="fa-solid fa-bug"></i></div>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-3">
+    <div class="cyber-card metric-card">
+      <div>
+        <div class="metric-lbl">Detection Rate</div>
+        <div class="metric-val text-warning" id="val-detection-rate">0.0%</div>
+      </div>
+      <div class="metric-icon warning"><i class="fa-solid fa-percent"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- SOC Visual Charts -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="cyber-card">
+      <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-chart-pie me-2 text-cyan"></i> Traffic Status Breakdown</h6>
+      <div style="height: 280px; position: relative;">
+        <canvas id="trafficStatusChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="cyber-card">
+      <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-chart-column me-2 text-cyan"></i> Attack Classification Distribution</h6>
+      <div style="height: 280px; position: relative;">
+        <canvas id="attackCategoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Threat Alerts -->
+<div class="cyber-card">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="text-white fw-bold m-0"><i class="fa-solid fa-bell me-2 text-cyan"></i> Recent Threat Alerts</h6>
+    <a href="{{ url_for('views.alerts_view') }}" class="btn btn-sm btn-outline-cyan" style="color: #06b6d4; border-color: #06b6d4;">View All Alerts</a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-cyber m-0 align-middle">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>TIMESTAMP</th>
+          <th>SRC IP</th>
+          <th>DST IP</th>
+          <th>ATTACK TYPE</th>
+          <th>SEVERITY</th>
+          <th>CONFIDENCE</th>
+          <th>STATUS</th>
+        </tr>
+      </thead>
+      <tbody id="recent-alerts-tbody">
+        <tr>
+          <td colspan="8" class="text-center text-muted py-4">Loading real-time threat stream...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

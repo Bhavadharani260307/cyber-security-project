@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AI Threat Monitor - NIDS{% endblock %}</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <!-- Google Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom SOC Dark Style -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  {% if current_user.is_authenticated %}
+  <!-- Sidebar Navigation -->
+  <div id="sidebar-wrapper">
+    <div class="brand-logo d-flex align-items-center gap-3">
+      <i class="fa-solid fa-shield-halved text-cyan fs-4" style="color: #06b6d4;"></i>
+      <div>
+        <div class="brand-title">CYBER NIDS</div>
+        <div class="text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">AI Threat Monitor</div>
+      </div>
+    </div>
+    <ul class="sidebar-nav">
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'views.dashboard_view' %}active{% endif %}" href="{{ url_for('views.dashboard_view') }}">
+          <i class="fa-solid fa-chart-line"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'views.traffic_analysis_view' %}active{% endif %}" href="{{ url_for('views.traffic_analysis_view') }}">
+          <i class="fa-solid fa-file-csv"></i> CSV Batch Analysis
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'views.single_predict_view' %}active{% endif %}" href="{{ url_for('views.single_predict_view') }}">
+          <i class="fa-solid fa-network-wired"></i> Single Flow Predictor
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'views.alerts_view' %}active{% endif %}" href="{{ url_for('views.alerts_view') }}">
+          <i class="fa-solid fa-triangle-exclamation"></i> Threat Alerts
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'views.model_metrics_view' %}active{% endif %}" href="{{ url_for('views.model_metrics_view') }}">
+          <i class="fa-solid fa-brain"></i> Model Metrics
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'views.reports_view' %}active{% endif %}" href="{{ url_for('views.reports_view') }}">
+          <i class="fa-solid fa-file-invoice"></i> Reports & Export
+        </a>
+      </li>
+      {% if current_user.role == 'Admin' %}
+      <li class="nav-item mt-3">
+        <div class="px-3 text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 1px;">Administration</div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint == 'views.user_management_view' %}active{% endif %}" href="{{ url_for('views.user_management_view') }}">
+          <i class="fa-solid fa-users-gear"></i> User Management
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+    <div class="p-3 border-top border-secondary">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <div class="fw-bold text-white small">{{ current_user.username }}</div>
+          <div class="text-muted" style="font-size: 0.75rem;">{{ current_user.role }}</div>
+        </div>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger" title="Logout">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Wrapper -->
+  <div id="content-wrapper">
+    <div class="top-header">
+      <h5 class="m-0 text-white font-weight-bold">{% block page_title %}SOC Security Operations Center{% endblock %}</h5>
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-success-subtle text-success border border-success px-3 py-2">
+          <i class="fa-solid fa-circle text-success me-1 pulse"></i> Engine: Active (Random Forest)
+        </span>
+      </div>
+    </div>
+
+    <div class="main-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+  {% else %}
+  <div class="container py-5">
+    {% block auth_content %}{% endblock %}
+  </div>
+  {% endif %}
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

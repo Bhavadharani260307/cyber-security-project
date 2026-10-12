@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Reports & Export - NIDS{% endblock %}
+{% block page_title %}Security Analytics Reports & CSV Export{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-lg-4">
+    <div class="cyber-card text-center p-4">
+      <i class="fa-solid fa-file-csv text-cyan fs-1 mb-3" style="color: #06b6d4;"></i>
+      <h5 class="text-white fw-bold">Traffic Predictions CSV</h5>
+      <p class="text-muted small">Export full historical database of classified network traffic records and feature parameters.</p>
+      <a href="/api/reports/export?type=predictions" class="btn btn-cyan w-100 fw-bold">
+        <i class="fa-solid fa-download me-2"></i> Export Predictions CSV
+      </a>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-4">
+    <div class="cyber-card text-center p-4">
+      <i class="fa-solid fa-file-shield text-warning fs-1 mb-3"></i>
+      <h5 class="text-white fw-bold">Threat Alerts CSV</h5>
+      <p class="text-muted small">Export security incident log entries including IPs, attack labels, confidence, and resolution status.</p>
+      <a href="/api/reports/export?type=alerts" class="btn btn-outline-warning w-100 fw-bold">
+        <i class="fa-solid fa-download me-2"></i> Export Threat Alerts CSV
+      </a>
+    </div>
+  </div>
+
+  <div class="col-md-6 col-lg-4">
+    <div class="cyber-card text-center p-4">
+      <i class="fa-solid fa-chart-line text-success fs-1 mb-3"></i>
+      <h5 class="text-white fw-bold">Analytics Summary</h5>
+      <p class="text-muted small">JSON API feed containing attack breakdown, severity frequencies, and detection totals.</p>
+      <a href="/api/reports/summary" target="_blank" class="btn btn-outline-success w-100 fw-bold">
+        <i class="fa-solid fa-code me-2"></i> View Summary API
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="cyber-card">
+  <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-pie-chart me-2 text-cyan"></i> Summary Metrics Distribution</h6>
+  <div id="report-summary-box" class="row g-3">
+    <div class="col-md-4"><div class="p-3 bg-dark rounded text-center"><div class="text-muted small">TOTAL PREDICTIONS</div><div class="fs-3 fw-bold text-white" id="rep-total">0</div></div></div>
+    <div class="col-md-4"><div class="p-3 bg-dark rounded text-center"><div class="text-muted small">NORMAL TRAFFIC</div><div class="fs-3 fw-bold text-success" id="rep-normal">0</div></div></div>
+    <div class="col-md-4"><div class="p-3 bg-dark rounded text-center"><div class="text-muted small">MALICIOUS INCIDENTS</div><div class="fs-3 fw-bold text-danger" id="rep-malicious">0</div></div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch("/api/reports/summary");
+    const data = await res.json();
+    document.getElementById("rep-total").innerText = data.total_predictions;
+    document.getElementById("rep-normal").innerText = data.normal_traffic;
+    document.getElementById("rep-malicious").innerText = data.malicious_traffic + data.suspicious_traffic;
+  } catch (err) {
+    console.error(err);
+  }
+});
+</script>
+{% endblock %}

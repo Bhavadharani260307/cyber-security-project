@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}CSV Batch Analysis - NIDS{% endblock %}
+{% block page_title %}Network Traffic CSV Upload & Prediction{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="cyber-card">
+      <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-cloud-arrow-up me-2 text-cyan"></i> Upload Network Flow CSV</h6>
+      <p class="text-muted small">
+        Select a CSV dataset file containing network flow records. The system will sanitize, scale features, execute Random Forest predictions, and record detected threats.
+      </p>
+
+      <form id="upload-csv-form" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label text-muted small fw-bold">CSV DATASET FILE</label>
+          <input type="file" id="csv-file-input" name="file" class="form-control form-cyber" accept=".csv" required>
+        </div>
+
+        <button type="submit" class="btn btn-cyan w-100 py-2 fw-bold" id="btn-upload-submit">
+          <i class="fa-solid fa-microchip me-2"></i> Run Batch Prediction
+        </button>
+      </form>
+
+      <div class="mt-4 pt-3 border-top border-secondary">
+        <div class="text-muted small">
+          <i class="fa-solid fa-circle-info text-cyan me-1"></i> Quick Test: You can use the generated synthetic dataset located at:<br>
+          <code class="text-white">ml/data/raw/sample_traffic_dataset.csv</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="cyber-card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="text-white fw-bold m-0"><i class="fa-solid fa-list-check me-2 text-cyan"></i> Batch Prediction Results</h6>
+        <span class="badge bg-dark border border-secondary text-cyan" id="result-summary-badge">0 Records Processed</span>
+      </div>
+
+      <div class="table-responsive" style="max-height: 500px;">
+        <table class="table table-cyber m-0 align-middle">
+          <thead>
+            <tr>
+              <th>SRC IP</th>
+              <th>DST IP</th>
+              <th>PROTO</th>
+              <th>DST PORT</th>
+              <th>ATTACK CLASSIFICATION</th>
+              <th>SEVERITY</th>
+              <th>CONFIDENCE</th>
+            </tr>
+          </thead>
+          <tbody id="batch-results-tbody">
+            <tr>
+              <td colspan="7" class="text-center text-muted py-5">Upload a CSV file to inspect batch classification results.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("upload-csv-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fileInput = document.getElementById("csv-file-input");
+  const submitBtn = document.getElementById("btn-upload-submit");
+
+  if (!fileInput.files.length) return;
+
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Analyzing Flow Packets...`;
+
+  try {
+    const response = await fetch("/api/predict/batch", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      document.getElementById("result-summary-badge").innerText = `${data.total_records} Records Processed (${data.alerts_generated} Alerts)`;
+      renderBatchResults(data.predictions);
+    } else {
+      alert(`Error: ${data.error}`);
+    }
+  } catch (err) {
+    alert(`Upload failed: ${err.message}`);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = `<i class="fa-solid fa-microchip me-2"></i> Run Batch Prediction`;
+  }
+});
+
+function renderBatchResults(predictions) {
+  const tbody = document.getElementById("batch-results-tbody");
+  tbody.innerHTML = "";
+
+  if (!predictions || predictions.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No records returned.</td></tr>`;
+    return;
+  }
+
+  predictions.forEach(p => {
+    let sevClass = "badge-sev-low";
+    if (p.severity === "MEDIUM") sevClass = "badge-sev-medium";
+    if (p.severity === "HIGH") sevClass = "badge-sev-high";
+    if (p.severity === "CRITICAL") sevClass = "badge-sev-critical";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><code>${p.source_ip}</code></td>
+      <td><code>${p.destination_ip}</code></td>
+      <td><span class="badge bg-dark">${p.protocol}</span></td>
+      <td>${p.destination_port}</td>
+      <td><span class="fw-bold text-white">${p.attack_type}</span></td>
+      <td><span class="badge badge-sev ${sevClass}">${p.severity}</span></td>
+      <td>${(p.confidence * 100).toFixed(1)}%</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+</script>
+{% endblock %}
